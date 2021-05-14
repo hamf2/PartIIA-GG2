@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from numpy.core.numeric import zeros_like
 import numpy.matlib
 
 def ramp_filter(sinogram, scale, alpha=0.001):
@@ -18,6 +19,8 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	#Set up filter to be at least twice as long as input
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)
+	ft_q = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a + 6 * np.abs(k) * np.cos((k * math.pi) / m) ** a) / (6 * scale * m)
+	q = np.real(np.fft.ifft(ft_q(np.arange(m) - m/2, alpha)))
 
 	# apply filter to all angles
 	print('Ramp filtering')
