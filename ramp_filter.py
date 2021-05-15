@@ -19,13 +19,14 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	#Set up filter to be at least twice as long as input
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)
-	ft_q = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a + 6 * np.abs(k) * np.cos((k * math.pi) / m) ** a) / (6 * scale * m)
-	q = np.real(np.fft.ifft(ft_q(np.arange(m) - m/2, alpha)))
+	f_w = lambda k, a : np.where(k == 0, 1, 0) * np.cos(math.pi / n) ** a / 6 + np.where(k <= n//2, k, 0) * np.cos((math.pi * np.where(k <= n//2, k, 0)) / n) ** a
+	q = f_w(np.roll(np.abs(np.arange(m) - n//2), -n//2), alpha)
 
 	# apply filter to all angles
 	print('Ramp filtering')
-	filtered = np.zeros((angles, n))
+	ft = np.fft.fft(sinogram, m, axis=1)
 	for angle in range(angles):
-		filtered[angle] = np.convolve(sinogram[angle], q)[:n]
+		ft[angle] *= q / (2 * math.pi)
+	filtered = np.real(np.fft.ifft(ft, axis= 1))[:, :n]
 	
-	return sinogram
+	return filtered
