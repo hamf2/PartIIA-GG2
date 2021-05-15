@@ -16,7 +16,7 @@ def ct_calibrate(photons, material, sinogram, scale, correct=True):
 	# Get dimensions and work out detection for just air of twice the side
 	# length (has to be the same as in ct_scan.py)
 	n = sinogram.shape[1]
-	calibration = ct_detect(photons, material.coeff('Air'), scale * n)
+	calibration = ct_detect(photons, material.coeff('Air'),  2 * scale * n)
 
 	# perform calibration
 	p = - np.log(sinogram / calibration)

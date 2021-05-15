@@ -24,5 +24,8 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 
 	# apply filter to all angles
 	print('Ramp filtering')
+	filtered = np.zeros((angles, n))
+	for angle in range(angles):
+		filtered[angle] = np.convolve(sinogram[angle], q)[:n]
 	
 	return sinogram
