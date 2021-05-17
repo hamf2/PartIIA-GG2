@@ -30,6 +30,6 @@ def scan_and_reconstruct(photons, material, phantom, scale, angles, mas=10000, a
 	reconstruction = back_project(sinogram)
 
 	# convert to Hounsfield Units
-	reconstruction = hu(photons, material, reconstruction, scale)
+	# reconstruction = hu(photons, material, reconstruction, scale)
 
 	return reconstruction

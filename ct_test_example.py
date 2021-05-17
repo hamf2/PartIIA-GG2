@@ -18,7 +18,7 @@ source = Source()
 # all the output should be saved in a 'results' directory
 
 def test_1():
-	# explain what this test is for
+	# produces a phantom and reconstruction for geometric comparison
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 3)
@@ -32,7 +32,7 @@ def test_1():
 	# how to check whether these results are actually correct?
 
 def test_2():
-	# explain what this test is for
+	# plots the 1D impulse response of the reconstruction process
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 2)
@@ -45,7 +45,7 @@ def test_2():
 	# how to check whether these results are actually correct?
 
 def test_3():
-	# explain what this test is for
+	# calculates the mean reconstructed attenuation of tissue
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 1)
@@ -59,6 +59,20 @@ def test_3():
 
 	# how to check whether these results are actually correct?
 
+def test_4():
+	# compares the relative magnitudes of the reconstruction and phantom
+
+	# work out what the initial conditions should be
+	p = ct_phantom(material.name, 256, 4)
+	s = source.photon('100kVp, 3mm Al')
+	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	# save some meaningful results
+	p = p / np.max(p)
+	y = y / np.max(y)
+	save_draw(np.divide(y - p, p, out=np.zeros_like(y), where=p!=0), 'results', 'test_4_image', 'seismic', [-1, 1])
+
+	# how to check whether these results are actually correct?
 
 # Run the various tests
 print('Test 1')
@@ -67,3 +81,5 @@ print('Test 2')
 test_2()
 print('Test 3')
 test_3()
+print('Test 4')
+test_4()
