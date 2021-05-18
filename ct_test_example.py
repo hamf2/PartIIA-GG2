@@ -60,7 +60,7 @@ def test_3():
 	# how to check whether these results are actually correct?
 
 def test_4():
-	# compares the relative magnitudes of the reconstruction and phantom
+	# creates a squared error image based on normalised magnitudes
 
 	# work out what the initial conditions should be
 	p = ct_phantom(material.name, 256, 4)
@@ -68,9 +68,9 @@ def test_4():
 	y = scan_and_reconstruct(s, material, p, 0.01, 256)
 
 	# save some meaningful results
-	p = p / np.max(p)
-	y = y / np.max(y)
-	save_draw(np.divide(y - p, p, out=np.zeros_like(y), where=p!=0), 'results', 'test_4_image', 'seismic', [-1, 1])
+	p = (p - np.mean(p)) / np.std(p)
+	y = (y - np.mean(y)) / np.std(y)
+	save_draw((y - p) ** 2, 'results', 'test_4_image')
 
 	# how to check whether these results are actually correct?
 
