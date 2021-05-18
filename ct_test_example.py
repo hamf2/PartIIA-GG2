@@ -59,21 +59,6 @@ def test_3():
 
 	# how to check whether these results are actually correct?
 
-def test_4():
-	# creates a squared error image based on normalised magnitudes
-
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, 4)
-	s = source.photon('100kVp, 3mm Al')
-	y = scan_and_reconstruct(s, material, p, 0.01, 256)
-
-	# save some meaningful results
-	p = (p - np.mean(p)) / np.std(p)
-	y = (y - np.mean(y)) / np.std(y)
-	save_draw((y - p) ** 2, 'results', 'test_4_image')
-
-	# how to check whether these results are actually correct?
-
 # Run the various tests
 print('Test 1')
 test_1()
@@ -81,5 +66,3 @@ print('Test 2')
 test_2()
 print('Test 3')
 test_3()
-print('Test 4')
-test_4()
