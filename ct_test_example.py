@@ -60,6 +60,18 @@ def test_3():
 	# the value should be approximately 0.2051544, the attenuation coefficient
 	# of soft tissue at 0.069MeV
 
+def test_4():
+
+	p = ct_phantom(material.name, 256, 7)
+	mat_p = np.zeros_like(p)
+	for index, name in enumerate(material.name):
+		if index in p:
+			mat_p += np.where(p == index, material.coeff(name)[source.mev == 0.1], 0)
+	s = fake_source(source.mev, 0.1, method='ideal')
+	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	save_draw(np.where(y >= 0, (mat_p - y) ** 2, 0), 'results', 'test_4_image')
+
 # Run the various tests
 print('Test 1')
 test_1()
@@ -67,3 +79,5 @@ print('Test 2')
 test_2()
 print('Test 3')
 test_3()
+print('Test 4')
+test_4()
