@@ -20,10 +20,13 @@ source = Source()
 def test_1():
 	# produces a phantom and reconstruction for geometric comparison
 
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, 3)
+	# set test size and scale
+	n, angles, scale = 256, 128, 0.01
 	s = source.photon('100kVp, 3mm Al')
-	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 3)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
 
 	# save some meaningful results
 	save_draw(y, 'results', 'test_1_image')
@@ -34,105 +37,127 @@ def test_1():
 def test_2():
 	# plots the 1D impulse response of the reconstruction process
 
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, 2)
+	# set test size and scale
+	n, angles, scale = 256, 128, 0.01
 	s = source.photon('80kVp, 1mm Al')
-	y = scan_and_reconstruct(s, material, p, 0.01, 256)
+
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 2)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
 
 	# save some meaningful results
 	save_plot(y[128,:], 'results', 'test_2_plot')
 
-	# the impulse response should resemble a sharp sinc function
+	# the impulse response should of the form of a sharp sinc function
 
 def test_3():
 	# calculates the mean reconstructed attenuation of tissue
 
-	# work out what the initial conditions should be
-	p = ct_phantom(material.name, 256, 1)
+	# set test size and scale
+	n, angles, scale = 256, 128, 0.01
 	s = fake_source(source.mev, 0.1, method='ideal')
-	y = scan_and_reconstruct(s, material, p, 0.1, 256)
+	
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 1)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
 
 	# save some meaningful results
-	f = open('results/test_3_output.txt', mode='w')
-	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
-	f.close()
+	with open('results/test_3_output.txt', mode='w') as f:
+		f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 
 	# the value should be approximately 0.203963689535233, the attenuation coefficient
 	# of soft tissue at 0.07MeV
 
-def test_4():
-    # compare the reconstructed and real attenuation coefficients
-    
-    # set test size and scale
-    n, angles, scale = 256, 128, 0.01
-    s = fake_source(source.mev, 0.1, method='ideal')
+def test_4(hu=False):
+	# compare the reconstructed and real attenuation coefficients
+	
+	# set test size and scale
+	n, angles, scale = 256, 128, 0.01
+	s = fake_source(source.mev, 0.1, method='ideal')
 
-    o_str = ''
-    for name in material.name[:9]:
-        # create a phantom and reconstruction
-        p = ct_phantom(material.name, n, 1, metal=name)
-        y = scan_and_reconstruct(s, material, p, scale, angles)
+	o_str = ''
+	for name in material.name[:9]:
+		# create a phantom and reconstruction
+		p = ct_phantom(material.name, n, 1, metal=name)
+		y = scan_and_reconstruct(s, material, p, scale, angles)
 
-	    # record actual and expected coefficients
-        o_str += '{0:<35} {1:<20} {2:>12}'.format('Mean value for ' + name + ' is ', str(np.mean(y[n//4:3*n//4, n//4:3*n//4])), '(Expected: ' + str(material.coeff(name)[np.argmax(s)]) + ')\n')
-    
-    # save some meaningful results
-    with open('results/test_4_output.txt', mode='w') as f:
-        f.write('Test with image size: ' +str(n)+'x'+str(n)+ ' and scale: ' +str(scale)+ ' cm/pixel\n\n')
-        f.write(o_str)
+		# get attenuation coefficients
+		mu_E = material.coeff(name)[np.argmax(s)]
+		mu_reconstruction = np.mean(y[n//4:3*n//4, n//4:3*n//4])
 
-def test_5():
-    # creates an image of the squared error in the reconstruction
+		# convert to HU if reconstruction in HU
+		if hu:
+			mu_E = 1000 * (mu_E - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
 
-    # set test size, angles, scale and source energy
-    n, angles, scale, E = 256, 256, 0.01, 0.1
-    s = fake_source(source.mev, E, method='ideal')
+		# record actual and expected coefficients
+		o_str += '{0:<35} {1:<20} {2:>12}'.format('Mean value for ' + name + ' is ', mu_reconstruction, '(Expected: ' + str(mu_E) + ')\n')
+	
+	# save some meaningful results
+	with open('results/test_4_output.txt', mode='w') as f:
+		f.write('Test with image size: ' +str(n)+'x'+str(n)+ ' and scale: ' +str(scale)+ ' cm/pixel\n\n')
+		f.write(o_str)
 
-    # create a phantom and reconstruction
-    p = ct_phantom(material.name, n, 7)
-    y = scan_and_reconstruct(s, material, p, scale, angles)
+def test_5(hu=False):
+	# creates an image of the squared error in the reconstruction
 
-    # convert the phantom indices to material coefficients at the source energy
-    mat_p = np.zeros_like(p)
-    for index, name in enumerate(material.name):
-	    if index in p:
-	    	mat_p += np.where(p == index, material.coeff(name)[np.argmax(s)], 0)
+	# set test size, angles, scale and source energy
+	n, angles, scale, E = 256, 256, 0.01, 0.1
+	s = fake_source(source.mev, E, method='ideal')
 
-    # calculate square error for each pixel
-    errsq = np.where(y >= 0, (mat_p - y) ** 2, 0)
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 7)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
 
-    # save some meaningful results
-    save_draw(errsq, 'results', 'test_5_image')
+	# convert the phantom indices to material coefficients at the source energy
+	p_mu = np.zeros_like(p)
+	for index, name in enumerate(material.name):
+		if index in p:
+			p_mu += np.where(p == index, material.coeff(name)[np.argmax(s)], 0)
+	
+	# convert to HU if reconstruction in HU
+	if hu:
+		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
 
-    # an ideal reconstruction would have no error
-    # the error is focussed around the edges of the large attenuations
+	# calculate square error for each pixel
+	errsq = np.where(y >= (0, -1024)[hu], (p_mu - y) ** 2, 0)
 
-def test_6():
-    # assesses the accuracy of a material reconstruction
+	# save some meaningful results
+	save_draw(errsq, 'results', 'test_5_image')
 
-    # set test size, angles, scale and source energy
-    n, angles, scale, E = 256, 256, 0.01, 0.1
-    s = fake_source(source.mev, E, method='ideal')
+	# an ideal reconstruction would have no error
+	# the error is focussed around the edges of the large attenuations
 
-    # create a phantom and reconstruction
-    p = ct_phantom(material.name, n, 6)
-    y = scan_and_reconstruct(s, material, p, scale, angles)
+def test_6(hu=False):
+	# assesses the accuracy of a rounding-based material
+	# reconstruction
 
-    # get material coefficients at the source energy
-    mu_E = material.coeffs[:, np.argmax(s)].flatten()
+	# set test size, angles, scale and source energy
+	n, angles, scale, E = 256, 256, 0.01, 0.1
+	s = fake_source(source.mev, E, method='ideal')
 
-    # round each reconstructed value to the nearest material
-    p_reconstruction = np.argmin(np.abs(np.subtract.outer(y, mu_E)), axis=-1)
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 6)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
 
-    # find areas where the reconstruction identifies the correct materials
-    correct = np.where(p_reconstruction == p, 1, 0)
+	# get material coefficients at the source energy
+	mu_E = material.coeffs[:, np.argmax(s)].flatten()
 
-    # save some meaningful results
-    save_draw(correct, 'results', 'test_6_image')
+	# convert to HU if reconstruction in HU
+	if hu:
+		mu_E = 1000 * (mu_E - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
 
-    # an ideal reconstruction would yield a fully white image
-    # errors could be reduced by using a reduced material set based on expected
-    # materials (ie Breast Tissue wouldn't be expected in a hip scan)
+	# round each reconstructed value to the nearest material
+	p_reconstruction = np.argmin(np.abs(np.subtract.outer(y, mu_E)), axis=-1)
+
+	# find areas where the reconstruction identifies the correct materials
+	correct = np.where(p_reconstruction == p, 1, 0)
+
+	# save some meaningful results
+	save_draw(correct, 'results', 'test_6_image')
+
+	# an ideal reconstruction would yield a fully white image
+	# errors could be reduced by using a reduced material set based on expected
+	# materials (ie Breast Tissue wouldn't be expected in a hip scan)
 
 
 # Run the various tests
