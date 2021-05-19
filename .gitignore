@@ -128,6 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Excel temp file
+~$mass_attenuation_coeffs.xlsx
+
 # Other stuff for testing
 *.dcm
 results
+test_output
+my_output
+my_test.py
