@@ -21,14 +21,14 @@ def test_1(nmetal, n, scale):
 
     o_str = '{0:<35} {1:<20} {2:>12}'.format('Mean value for ' + nmetal + ' is ', str(np.mean(y[n//4:3*n//4, n//4:3*n//4])),
      '(Expected: ' + str(material.coeffs[material.name.index(nmetal)][np.argmax(s)] - material.coeffs[0][np.argmax(s)]) + ')\n')
-    with open('test_output/test_2_output.txt', mode='a') as f:
+    with open('test_output/test_1_output.txt', mode='a') as f:
         f.write(o_str)
 
 # set test size and scale
 n, scale = 128, 0.01
 # create/wipe output file and run tests
 if(not(os.path.exists('test_output'))):os.mkdir('test_output')
-with open('test_output/test_2_output.txt', mode='w') as f:
+with open('test_output/test_1_output.txt', mode='w') as f:
     f.write('Test with image size: ' +str(n)+'x'+str(n)+ ' and scale: ' +str(scale)+ ' cm/pixel\n\n')
 for nmetal in material.name[:9]:
     test_1(nmetal, n, scale)
