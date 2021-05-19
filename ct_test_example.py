@@ -29,7 +29,7 @@ def test_1():
 	save_draw(y, 'results', 'test_1_image')
 	save_draw(p, 'results', 'test_1_phantom')
 
-	# how to check whether these results are actually correct?
+	# the reconstruction should resemble the phantom
 
 def test_2():
 	# plots the 1D impulse response of the reconstruction process
@@ -42,7 +42,7 @@ def test_2():
 	# save some meaningful results
 	save_plot(y[128,:], 'results', 'test_2_plot')
 
-	# how to check whether these results are actually correct?
+	# the impulse response should resemble a sharp sinc function
 
 def test_3():
 	# calculates the mean reconstructed attenuation of tissue
@@ -57,7 +57,8 @@ def test_3():
 	f.write('Mean value is ' + str(np.mean(y[64:192, 64:192])))
 	f.close()
 
-	# how to check whether these results are actually correct?
+	# the value should be approximately 0.2051544, the attenuation coefficient
+	# of soft tissue at 0.069MeV
 
 # Run the various tests
 print('Test 1')
