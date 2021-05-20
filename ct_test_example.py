@@ -98,7 +98,7 @@ def test_4(hu=False):
 		f.write(o_str)
 
 def test_5(hu=False):
-	# creates an image of the squared error in the reconstruction
+	# creates an image of the absolute error in the reconstruction
 
 	# set test size, angles, scale and source energy
 	n, angles, scale, E = 256, 256, 0.01, 0.1
@@ -119,10 +119,10 @@ def test_5(hu=False):
 		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
 
 	# calculate square error for each pixel
-	errsq = np.where(y >= (0, -1024)[hu], (p_mu - y) ** 2, 0)
+	err = np.where(y >= (0, -1024)[hu], np.abs(p_mu - y), 0)
 
 	# save some meaningful results
-	save_draw(errsq, 'results', 'test_5_image')
+	save_draw(err, 'results', 'test_5_image')
 
 	# an ideal reconstruction would have no error
 	# the error is focussed around the edges of the large attenuations
