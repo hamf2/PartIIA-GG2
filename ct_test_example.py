@@ -128,8 +128,7 @@ def test_5(hu=False):
 	# the error is focussed around the edges of the large attenuations
 
 def test_6(hu=False):
-	# assesses the accuracy of a rounding-based material
-	# reconstruction
+	# assesses the accuracy of a rounding-based material reconstruction
 
 	# set test size, angles, scale and source energy
 	n, angles, scale, E = 256, 256, 0.01, 0.1
@@ -159,6 +158,52 @@ def test_6(hu=False):
 	# errors could be reduced by using a reduced material set based on expected
 	# materials (ie Breast Tissue wouldn't be expected in a hip scan)
 
+def test_7(hu=False):
+	# calculates the structural similarity index between the attenuation 
+	# phantom and reconstruction
+
+	# set test size, angles, scale and source energy
+	n, angles, scale, E = 256, 256, 0.01, 0.1
+	s = fake_source(source.mev, E, method='ideal')
+
+	# create a phantom and reconstruction
+	p = ct_phantom(material.name, n, 5)
+	y = scan_and_reconstruct(s, material, p, scale, angles)
+
+	# convert the phantom indices to material coefficients at the source energy
+	p_mu = np.zeros_like(p)
+	for index, name in enumerate(material.name):
+		if index in p:
+			p_mu += np.where(p == index, material.coeff(name)[np.argmax(s)], 0)
+	
+	# convert to HU if reconstruction in HU
+	if hu:
+		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
+		p_mu = np.clip(p_mu, -1024, 3071)
+
+		# remap to 8-bit values
+		y = np.interp(y, (-1024, 3071), (0, 255))
+		p_mu = np.interp(p_mu, (-1024, 3071), (0, 255))
+	else:
+		y = np.clip(y, 0, None)
+
+		# remap to 8-bit values
+		low, high = np.min(np.concatenate((y, p_mu))), np.max(np.concatenate((y, p_mu)))
+		y = np.interp(y, (low, high), (0, 255))
+		p_mu = np.interp(p_mu, (low, high), (0, 255))
+
+	# calculate the SSIM
+	L = 2 ** 8 - 1
+	c1, c2 = (0.01 * L) ** 2, (0.03 * L) ** 2
+	cov = np.mean((y - np.mean(y)) * (p_mu - np.mean(p_mu)))
+	SSIM = (2 * np.mean(y) * np.mean(p_mu) + c1) * (2 * cov + c2) / ((np.mean(y) ** 2 + np.mean(p_mu) ** 2 + c1) * (np.var(y) + np.var(p_mu) + c2))
+
+
+	# save some meaningful results
+	with open('results/test_7_output.txt', mode='w') as f:
+		f.write('SSIM between the attenuation phantom and reconstruction is ' + str(SSIM))
+
+	# the value should be close to 1
 
 # Run the various tests
 print('Test 1')
@@ -173,3 +218,5 @@ print('Test 5')
 test_5()
 print('Test 6')
 test_6()
+print('Test 7')
+test_7()
