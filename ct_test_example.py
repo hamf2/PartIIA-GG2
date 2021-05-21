@@ -162,48 +162,56 @@ def test_7(hu=False):
 	# calculates the structural similarity index between the attenuation 
 	# phantom and reconstruction
 
-	# set test size, angles, scale and source energy
-	n, angles, scale, E = 256, 256, 0.01, 0.1
-	s = fake_source(source.mev, E, method='ideal')
+	# set test size, angles, scale, source energy and filter thickness
+	n, angles, scale, E, t = 256, 256, 0.01, 0.1, 2
+	s_i = fake_source(source.mev, E, material.coeff('Aluminium'), 1, method='ideal')
+	s_r = source.photon('{:d}kVp, {:1d}mm Al'.format(int(1000 * E), t))
 
-	# create a phantom and reconstruction
+	# create a phantom and reconstructions
 	p = ct_phantom(material.name, n, 5)
-	y = scan_and_reconstruct(s, material, p, scale, angles)
+	y_i = scan_and_reconstruct(s_i, material, p, scale, angles)
+	y_r = scan_and_reconstruct(s_r, material, p, scale, angles)
 
 	# convert the phantom indices to material coefficients at the source energy
 	p_mu = np.zeros_like(p)
 	for index, name in enumerate(material.name):
 		if index in p:
-			p_mu += np.where(p == index, material.coeff(name)[np.argmax(s)], 0)
+			p_mu += np.where(p == index, material.coeff(name)[np.argmax(s_i)], 0)
 	
 	# convert to HU if reconstruction in HU
 	if hu:
-		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
+		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s_i)]) / material.coeff('Water')[np.argmax(s_i)]
 		p_mu = np.clip(p_mu, -1024, 3071)
 
 		# remap to 8-bit values
-		y = np.interp(y, (-1024, 3071), (0, 255))
+		y_i = np.interp(y_i, (-1024, 3071), (0, 255))
+		y_r = np.interp(y_r, (-1024, 3071), (0, 255))
 		p_mu = np.interp(p_mu, (-1024, 3071), (0, 255))
 	else:
-		y = np.clip(y, 0, None)
+		y_i = np.clip(y_i, 0, None)
+		y_r = np.clip(y_r, 0, None)
 
 		# remap to 8-bit values
-		low, high = np.min(np.concatenate((y, p_mu))), np.max(np.concatenate((y, p_mu)))
-		y = np.interp(y, (low, high), (0, 255))
+		low, high = np.min(np.concatenate((y_i, y_r, p_mu))), np.max(np.concatenate((y_i, y_r, p_mu)))
+		y_i = np.interp(y_i, (low, high), (0, 255))
+		y_r = np.interp(y_r, (low, high), (0, 255))
 		p_mu = np.interp(p_mu, (low, high), (0, 255))
 
 	# calculate the SSIM
 	L = 2 ** 8 - 1
 	c1, c2 = (0.01 * L) ** 2, (0.03 * L) ** 2
-	cov = np.mean((y - np.mean(y)) * (p_mu - np.mean(p_mu)))
-	SSIM = (2 * np.mean(y) * np.mean(p_mu) + c1) * (2 * cov + c2) / ((np.mean(y) ** 2 + np.mean(p_mu) ** 2 + c1) * (np.var(y) + np.var(p_mu) + c2))
+	cov = lambda x, y :np.mean((y - np.mean(y)) * (x - np.mean(x)))
+	SSIM = lambda x, y : (2 * np.mean(y) * np.mean(x) + c1) * (2 * cov(x, y) + c2) / ((np.mean(y) ** 2 + np.mean(x) ** 2 + c1) * (np.var(y) + np.var(x) + c2))
 
 
 	# save some meaningful results
 	with open('results/test_7_output.txt', mode='w') as f:
-		f.write('SSIM between the attenuation phantom and reconstruction is ' + str(SSIM))
+		f.write('SSIM between the attenuation phantom and ideal reconstruction is ' + str(SSIM(p_mu, y_i)) + '\n')
+		f.write('SSIM between the attenuation phantom and real reconstruction is  ' + str(SSIM(p_mu, y_r)) + '\n')
+		f.write('SSIM between the ideal reconstruction and real reconstruction is ' + str(SSIM(y_i, y_r)))
 
-	# the value should be close to 1
+	# identical images have an SSIM of 1, the possible range is -1 to 1
+	# the reconstructions should thereforehave values close to 1
 
 # Run the various tests
 print('Test 1')
