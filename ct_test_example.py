@@ -164,8 +164,8 @@ def test_7(hu=False):
 
 	# set test size, angles, scale, source energy and filter thickness
 	n, angles, scale, E, t = 256, 256, 0.01, 0.1, 2
-	s_i = fake_source(source.mev, E, material.coeff('Aluminium'), 1, method='ideal')
-	s_r = source.photon('{:d}kVp, {:1d}mm Al'.format(int(1000 * E), t))
+	s_i = fake_source(source.mev, E, material.coeff('Aluminium'), t, method='ideal')
+	s_r = source.photon('{:d}kVp, {:d}mm Al'.format(int(1000 * E), t))
 
 	# create a phantom and reconstructions
 	p = ct_phantom(material.name, n, 5)
@@ -200,18 +200,17 @@ def test_7(hu=False):
 	# calculate the SSIM
 	L = 2 ** 8 - 1
 	c1, c2 = (0.01 * L) ** 2, (0.03 * L) ** 2
-	cov = lambda x, y :np.mean((y - np.mean(y)) * (x - np.mean(x)))
+	cov = lambda x, y : np.mean((y - np.mean(y)) * (x - np.mean(x)))
 	SSIM = lambda x, y : (2 * np.mean(y) * np.mean(x) + c1) * (2 * cov(x, y) + c2) / ((np.mean(y) ** 2 + np.mean(x) ** 2 + c1) * (np.var(y) + np.var(x) + c2))
-
 
 	# save some meaningful results
 	with open('results/test_7_output.txt', mode='w') as f:
-		f.write('SSIM between the attenuation phantom and ideal reconstruction is ' + str(SSIM(p_mu, y_i)) + '\n')
-		f.write('SSIM between the attenuation phantom and real reconstruction is  ' + str(SSIM(p_mu, y_r)) + '\n')
-		f.write('SSIM between the ideal reconstruction and real reconstruction is ' + str(SSIM(y_i, y_r)))
+		f.write('SSIM between the attenuation phantom and ideal source reconstruction is ' + str(SSIM(p_mu, y_i)) + '\n')
+		f.write('SSIM between the attenuation phantom and real source reconstruction is  ' + str(SSIM(p_mu, y_r)) + '\n')
+		f.write('SSIM between the ideal source reconstruction and real source reconstruction is ' + str(SSIM(y_i, y_r)))
 
 	# identical images have an SSIM of 1, the possible range is -1 to 1
-	# the reconstructions should thereforehave values close to 1
+	# the reconstructions should therefore have values close to 1
 
 # Run the various tests
 print('Test 1')
