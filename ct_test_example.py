@@ -117,6 +117,7 @@ def test_5(hu=False):
 	# convert to HU if reconstruction in HU
 	if hu:
 		p_mu = 1000 * (p_mu - material.coeff('Water')[np.argmax(s)]) / material.coeff('Water')[np.argmax(s)]
+		p_mu = np.clip(p_mu, -1024, 3071)
 
 	# calculate square error for each pixel
 	err = np.where(y >= (0, -1024)[hu], np.abs(p_mu - y), 0)
@@ -205,14 +206,15 @@ def test_7(hu=False):
 
 	# save some meaningful results
 	with open('results/test_7_output.txt', mode='w') as f:
-		f.write('SSIM between the attenuation phantom and ideal source reconstruction is ' + str(SSIM(p_mu, y_i)) + '\n')
-		f.write('SSIM between the attenuation phantom and real source reconstruction is  ' + str(SSIM(p_mu, y_r)) + '\n')
+		f.write('SSIM between the attenuation phantom and ideal source reconstruction is        ' + str(SSIM(p_mu, y_i)) + '\n')
+		f.write('SSIM between the attenuation phantom and real source reconstruction is         ' + str(SSIM(p_mu, y_r)) + '\n')
 		f.write('SSIM between the ideal source reconstruction and real source reconstruction is ' + str(SSIM(y_i, y_r)))
 
 	# identical images have an SSIM of 1, the possible range is -1 to 1
 	# the reconstructions should therefore have values close to 1
 
 # Run the various tests
+hounsfield = True
 print('Test 1')
 test_1()
 print('Test 2')
@@ -220,10 +222,10 @@ test_2()
 print('Test 3')
 test_3()
 print('Test 4')
-test_4()
+test_4(hounsfield)
 print('Test 5')
-test_5()
+test_5(hounsfield)
 print('Test 6')
-test_6()
+test_6(hounsfield)
 print('Test 7')
-test_7()
+test_7(hounsfield)

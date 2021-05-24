@@ -19,6 +19,8 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	#Set up filter to be at least twice as long as input
 	m = np.ceil(np.log(2*n-1) / np.log(2))
 	m = int(2 ** m)
+
+	# define values for raised Ram-Lak filter (positive frequency only)
 	q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a / 6 + np.abs(k) * np.cos((math.pi * k) / m) ** a) / (m * scale)
 	q = q_k(np.arange(m//2 + 1), alpha)
 

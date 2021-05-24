@@ -11,11 +11,10 @@ def hu(p, material, reconstruction, scale):
 	n = max(reconstruction.shape)
 	air = material.coeff('Air')
 	water = material.coeff('Water')
-
+	
 	# put this through the same calibration process as the normal CT data
-	coeffs = np.array([air, water, air])
-	depths = scale * np.array([n/2, n, n/2])
-	calibration = ct_calibrate(p, material, np.array(ct_detect(p, coeffs, depths)).reshape((1, 1)), scale)
+	calibration = ct_detect(p, np.array((water, air)), scale * n * np.array((1, 2)))
+	calibration = ct_calibrate(p, material, np.array(calibration, ndmin=2), scale) / (scale * n)
 
 	# use result to convert to hounsfield units
 	# limit minimum to -1024, which is normal for CT data.
