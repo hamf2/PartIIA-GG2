@@ -1,6 +1,9 @@
 import numpy as np
 from attenuate import attenuate
 
+NOISE = True
+ADDITIVE_NOISE = True
+
 def ct_detect(p, coeffs, depth, mas=10000):
 
 	"""ct_detect returns detector photons for given material depths.
@@ -35,7 +38,7 @@ def ct_detect(p, coeffs, depth, mas=10000):
 	if type(depth) != np.ndarray:
 		depth = np.array([depth]).reshape((1,1))
 	elif depth.ndim == 1:
-		if materials is 1:
+		if materials == 1:
 			depth = depth.reshape(1, len(depth))
 		else:
 			depth = depth.reshape(len(depth), 1)
@@ -57,7 +60,23 @@ def ct_detect(p, coeffs, depth, mas=10000):
 	# sum this over energies
 	detector_photons = np.sum(detector_photons, axis=0)
 
-	# model noise
+	if NOISE:
+		if ADDITIVE_NOISE:
+			# calculate expected additive radiation noise
+			detector_area = 0.02 							# cm^2
+			background_level = 100							# Expected number of photons of background radiation incident per cm^2 over detection time
+			background = background_level * detector_area
+			scatter_coefficient = 0.00000001				# Expected proportion of photons incident on detector after multiple scatter
+			scattered = np.sum(p) * mas * detector_area * scatter_coefficient
+
+			# calculate expected number of photons detected
+			detector_photons = detector_photons * mas * detector_area + background + scattered
+
+		# model noise
+		try:
+			detector_photons = np.random.poisson(detector_photons)
+		except ValueError:
+			detector_photons = np.random.normal(detector_photons, np.sqrt(detector_photons))
 
 	# minimum detection is one photon
 	detector_photons = np.clip(detector_photons, 1, None)
