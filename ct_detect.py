@@ -61,16 +61,18 @@ def ct_detect(p, coeffs, depth, mas=10000):
 	detector_photons = np.sum(detector_photons, axis=0)
 
 	if NOISE:
+		# calculate number of photons expected
+		detector_area = 0.02 	# cm^2
+		detector_photons = detector_photons * mas * detector_area
+
 		if ADDITIVE_NOISE:
 			# calculate expected additive radiation noise
-			detector_area = 0.02 							# cm^2
 			background_level = 100							# Expected number of photons of background radiation incident per cm^2 over detection time
 			background = background_level * detector_area
 			scatter_coefficient = 0.00000001				# Expected proportion of photons incident on detector after multiple scatter
 			scattered = np.sum(p) * mas * detector_area * scatter_coefficient
 
-			# calculate expected number of photons detected
-			detector_photons = detector_photons * mas * detector_area + background + scattered
+			detector_photons = detector_photons + background + scattered
 
 		# model noise
 		try:
