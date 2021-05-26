@@ -21,6 +21,7 @@ def ct_calibrate(photons, material, sinogram, scale, correct=True):
 	# perform calibration
 	p = - np.log(sinogram / calibration)
 
+	# apply beam hardening correction
 	if correct:
 		# create array of thicknesses and corresponding attenuations
 		t = scale * np.arange(np.clip(n, 256, None))
