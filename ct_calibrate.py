@@ -21,4 +21,17 @@ def ct_calibrate(photons, material, sinogram, scale, correct=True):
 	# perform calibration
 	p = - np.log(sinogram / calibration)
 
+	if correct:
+		# create array of thicknesses and corresponding attenuations
+		t = scale * np.arange(np.clip(n, 256, None))
+		p_w = - np.log(ct_detect(photons, material.coeff('Water'), t) / calibration)
+
+		# fit polynomial and evaluate for scan attenuations
+		f = np.polynomial.polynomial.polyfit(p_w, t, 3)
+		t_m = np.polynomial.polynomial.polyval(p, f)
+
+		# apply scaling
+		C = 0.243
+		p = C * t_m
+
 	return p

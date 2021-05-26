@@ -21,7 +21,7 @@ def test_1():
 	# produces a phantom and reconstruction for geometric comparison
 
 	# set test size and scale
-	n, angles, scale = 256, 128, 0.01
+	n, angles, scale = 256, 256, 0.01
 	s = source.photon('100kVp, 3mm Al')
 
 	# create a phantom and reconstruction
@@ -38,7 +38,7 @@ def test_2():
 	# plots the 1D impulse response of the reconstruction process
 
 	# set test size and scale
-	n, angles, scale = 256, 128, 0.01
+	n, angles, scale = 256, 256, 0.01
 	s = source.photon('80kVp, 1mm Al')
 
 	# create a phantom and reconstruction
@@ -54,7 +54,7 @@ def test_3():
 	# calculates the mean reconstructed attenuation of tissue
 
 	# set test size and scale
-	n, angles, scale = 256, 128, 0.01
+	n, angles, scale = 256, 256, 0.01
 	s = fake_source(source.mev, 0.1, method='ideal')
 	
 	# create a phantom and reconstruction
@@ -72,7 +72,7 @@ def test_4(hu=False):
 	# compare the reconstructed and real attenuation coefficients
 	
 	# set test size and scale
-	n, angles, scale = 256, 128, 0.01
+	n, angles, scale = 128, 128, 0.01
 	s = fake_source(source.mev, 0.1, method='ideal')
 
 	o_str = ''
