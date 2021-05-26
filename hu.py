@@ -13,7 +13,7 @@ def hu(p, material, reconstruction, scale):
 	water = material.coeff('Water')
 	
 	# put this through the same calibration process as the normal CT data
-	calibration = ct_detect(p, np.array((water, air)), scale * n * np.array((1, 2)))
+	calibration = ct_detect(p, np.array((water, air)), scale * n * np.ones((2)))
 	calibration = ct_calibrate(p, material, np.array(calibration, ndmin=2), scale) / (scale * n)
 
 	# use result to convert to hounsfield units
