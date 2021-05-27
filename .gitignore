@@ -133,6 +133,7 @@ dmypy.json
 
 # Other stuff for testing
 *.dcm
+*.rsq
 results
 test_output
 my_output

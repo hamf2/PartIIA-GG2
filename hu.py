@@ -19,6 +19,6 @@ def hu(p, material, reconstruction, scale):
 	# use result to convert to hounsfield units
 	# limit minimum to -1024, which is normal for CT data.
 	hounsfield = 1000 * (reconstruction - calibration) / calibration
-	hounsfield = np.clip(hounsfield, -1024, 3071)
+	hounsfield = np.clip(hounsfield, -1024, 3071).astype('int')
 
 	return hounsfield
