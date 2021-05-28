@@ -279,7 +279,24 @@ class Xtreme(object):
 
 						# reconstruct scan
 
+                        print("Fan:  " + str(fan))
+                        print("Scan: " + str(scan)) # debug
+
+                        
+                        [X, Xmin, Xmax] = self.get_rsq_slice(scan)      # get data
+                        X = - np.log(X/Xmax)                            # calibrate
+                        X = self.fan_to_parallel(X)
+                        X = ramp_filter(X, self.scale)
+                        X = back_project(X)
+
+                        # Convert to Hounsfield Units (I feel there should be a better way to do this)
+                        X = X * 82400 - 1024
+                        X = X.clip(min=-1024, max=3071)
+
 						# save as dicom file
+                        create_dicom(X, file, self.scale, f=z, study_uid=studyuid, series_uid=seriesuid, 
+                            frame_uid=frameuid, time=datetime.datetime.now(), storage_directory='data/output')
+
                         z = z + 1
 
         return
