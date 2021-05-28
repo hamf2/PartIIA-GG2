@@ -124,6 +124,8 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+settings.json
+.vscode
 
 # Pyre type checker
 .pyre/
@@ -138,3 +140,6 @@ results
 test_output
 my_output
 my_test.py
+plotter.py
+data
+

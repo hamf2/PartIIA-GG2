@@ -1,10 +1,7 @@
 import numpy as np
 from attenuate import attenuate
 
-NOISE = True
-ADDITIVE_NOISE = True
-
-def ct_detect(p, coeffs, depth, mas=10000):
+def ct_detect(p, coeffs, depth, mas=10000, noise = True, additive_noise = True):
 
 	"""ct_detect returns detector photons for given material depths.
 	y = ct_detect(p, coeffs, depth, mas) takes a source energy
@@ -60,12 +57,12 @@ def ct_detect(p, coeffs, depth, mas=10000):
 	# sum this over energies
 	detector_photons = np.sum(detector_photons, axis=0)
 
-	if NOISE:
+	if noise:
 		# calculate number of photons expected
 		detector_area = 0.02 	# cm^2
 		detector_photons = detector_photons * mas * detector_area
 
-		if ADDITIVE_NOISE:
+		if additive_noise:
 			# calculate expected additive radiation noise
 			background_level = 100							# Expected number of photons of background radiation incident per cm^2 over detection time
 			background = background_level * detector_area
