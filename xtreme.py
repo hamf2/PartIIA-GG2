@@ -274,11 +274,12 @@ class Xtreme(object):
             else:
 
                 # default method should reconstruct each slice separately
+                sys.stdout.write('\n\n\n\n\n')
                 for scan in range(fan+self.skip_scans,fan+self.fan_scans-self.skip_scans):
                     if (scan<self.scans):
 
-                        print("Fan:  " + str(fan // self.fan_scans + 1))
-                        print("Scan: " + str((scan - self.skip_scans) % self.fan_scans + 1))
+                        sys.stdout.write('\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[2K\x1b[1A\x1b[1A' + "Fan:  " + str(fan // self.fan_scans + 1) + '\n')
+                        sys.stdout.write("Scan: " + str((scan - self.skip_scans) % self.fan_scans + 1) + '\n')
                         
                         # get scan detector values, noise floor and reference
                         sinogram, noise, ref = self.get_rsq_slice(scan)
