@@ -284,7 +284,7 @@ class Xtreme(object):
 
                         
                         [X, Xmin, Xmax] = self.get_rsq_slice(scan)      # get data
-                        X = - np.log(X/Xmax)                            # calibrate
+                        X = - np.log((X-Xmin).clip(min=1)/(Xmax-Xmin).clip(min=1))       # calibrate
                         X = self.fan_to_parallel(X)
                         X = ramp_filter(X, self.scale)
                         X = back_project(X)
