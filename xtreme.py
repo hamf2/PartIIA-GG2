@@ -266,7 +266,7 @@ class Xtreme(object):
 
         # main loop over each z-fan
         for fan in range(0, self.scans, self.fan_scans):
-            if method is 'fdk':
+            if method == 'fdk':
                 
                 # correct reconstruction using FDK method, self.fan_scans scans at a time
                 pass
