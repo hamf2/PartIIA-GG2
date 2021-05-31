@@ -277,25 +277,30 @@ class Xtreme(object):
                 for scan in range(fan+self.skip_scans,fan+self.fan_scans-self.skip_scans):
                     if (scan<self.scans):
 
-						# reconstruct scan
-
-                        print("Fan:  " + str(fan))
-                        print("Scan: " + str(scan)) # debug
-
+                        print("Fan:  " + str(fan // self.fan_scans + 1))
+                        print("Scan: " + str((scan - self.skip_scans) % self.fan_scans + 1))
                         
-                        [X, Xmin, Xmax] = self.get_rsq_slice(scan)      # get data
-                        X = - np.log(X/Xmax)                            # calibrate
-                        X = self.fan_to_parallel(X)
-                        X = ramp_filter(X, self.scale)
-                        X = back_project(X)
+                        # get scan detector values, noise floor and reference
+                        sinogram, noise, ref = self.get_rsq_slice(scan)
 
-                        # Convert to Hounsfield Units (I feel there should be a better way to do this)
-                        X = X * 82400 - 1024
-                        X = X.clip(min=-1024, max=3071)
+                        # convert detector values into calibrated attenuation values
+                        sinogram = - np.log((sinogram - noise) / (ref - noise))
+
+                        # convert scan from fan to parallel
+                        sinogram = self.fan_to_parallel(sinogram)
+
+                        # apply Ram-Lak filter
+                        sinogram = ramp_filter(sinogram, self.scale, alpha)
+
+                        # back project 
+                        reconstruction = back_project(sinogram)
+
+                        # convert to Hounsfield units
+                        reconstruction = 1000 * (reconstruction - 23.835e-3) / 23.835e-3
+                        reconstruction = reconstruction.clip(min=-1024, max=3071)
 
 						# save as dicom file
-                        create_dicom(X, file, self.scale, f=z, study_uid=studyuid, series_uid=seriesuid, 
-                            frame_uid=frameuid, time=datetime.datetime.now(), storage_directory='data/output')
+                        create_dicom(reconstruction, file, self.scale, self.scale, z, studyuid, seriesuid, frameuid, time)
 
                         z = z + 1
 
