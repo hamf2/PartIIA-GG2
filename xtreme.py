@@ -1,3 +1,4 @@
+from post_filter import post_filter
 import numpy as np
 import scipy
 from scipy import ndimage
@@ -238,7 +239,7 @@ class Xtreme(object):
 
 
 
-    def reconstruct_all(self, file, method=None, alpha=None):
+    def reconstruct_all(self, file, method=None, bp_filter='cosine', alpha=None, im_filter=None):
         
         """ reconstruct_all( FILENAME, ALPHA ) creates a series of DICOM
         files for the Xtreme RSQ data. FILENAME is the base file name for
@@ -265,6 +266,7 @@ class Xtreme(object):
         time = datetime.datetime.now()
 
         # main loop over each z-fan
+        sys.stdout.write('\n\n\n\n\n')
         for fan in range(0, self.scans, self.fan_scans):
             if method == 'fdk':
                 
@@ -274,7 +276,6 @@ class Xtreme(object):
             else:
 
                 # default method should reconstruct each slice separately
-                sys.stdout.write('\n\n\n\n\n')
                 for scan in range(fan+self.skip_scans,fan+self.fan_scans-self.skip_scans):
                     if (scan<self.scans):
 
@@ -291,7 +292,7 @@ class Xtreme(object):
                         sinogram = self.fan_to_parallel(sinogram)
 
                         # apply Ram-Lak filter
-                        sinogram = ramp_filter(sinogram, self.scale, alpha)
+                        sinogram = ramp_filter(sinogram, self.scale, alpha, bp_filter)
 
                         # back project 
                         reconstruction = back_project(sinogram)
@@ -299,6 +300,9 @@ class Xtreme(object):
                         # convert to Hounsfield units
                         reconstruction = 1000 * (reconstruction - 23.835e-3) / 23.835e-3
                         reconstruction = reconstruction.clip(min=-1024, max=3071)
+
+                        # apply image filters
+                        reconstruction = post_filter(reconstruction, im_filter)
 
 						# save as dicom file
                         create_dicom(reconstruction, file, self.scale, self.scale, z, studyuid, seriesuid, frameuid, time)

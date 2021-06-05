@@ -3,7 +3,7 @@ import numpy as np
 from numpy.core.numeric import zeros_like
 import numpy.matlib
 
-def ramp_filter(sinogram, scale, alpha=0.001):
+def ramp_filter(sinogram, scale, alpha=0.001, mode='cosine'):
 	""" Ram-Lak filter with raised-cosine for CT reconstruction
 
 	fs = ramp_filter(sinogram, scale) filters the input in sinogram (angles x samples)
@@ -21,7 +21,13 @@ def ramp_filter(sinogram, scale, alpha=0.001):
 	m = int(2 ** m)
 
 	# define values for raised Ram-Lak filter (positive frequency only)
-	q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a / 6 + np.abs(k) * np.cos((math.pi * k) / m) ** a) / (m * scale)
+	if mode is 'hamming':
+		q_k = lambda k, a : (np.where(k == 0, 1, 0) * (np.exp(- alpha) + (1 - np.exp(- alpha)) * np.cos(2 * math.pi / m)) / 6 + np.abs(k) * (np.exp(- alpha) + (1 - np.exp(- alpha)) * np.cos(2 * math.pi * k/ m))) / (m * scale)
+	elif mode is 'shepp-logan':
+		q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.sin(math.pi / m) ** a / 6 + np.abs(k) * np.sin((math.pi * k) / m) ** a) / (m * scale)
+	else:
+		q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a / 6 + np.abs(k) * np.cos((math.pi * k) / m) ** a) / (m * scale)
+
 	q = q_k(np.arange(m//2 + 1), alpha)
 
 	# apply filter to all angles
