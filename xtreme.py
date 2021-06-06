@@ -7,6 +7,7 @@ import os
 import sys
 from ramp_filter import *
 from back_project import *
+from post_filter import *
 from create_dicom import *
 
 class Xtreme(object):

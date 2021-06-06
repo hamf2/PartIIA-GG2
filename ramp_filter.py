@@ -22,9 +22,9 @@ def ramp_filter(sinogram, scale, alpha=0.001, mode='cosine'):
 
 	# define values for raised Ram-Lak filter (positive frequency only)
 	if mode is 'hamming':
-		q_k = lambda k, a : (np.where(k == 0, 1, 0) * (np.exp(- alpha) + (1 - np.exp(- alpha)) * np.cos(2 * math.pi / m)) / 6 + np.abs(k) * (np.exp(- alpha) + (1 - np.exp(- alpha)) * np.cos(2 * math.pi * k/ m))) / (m * scale)
+		q_k = lambda k, a : (np.where(k == 0, 1, 0) * (np.exp(-a) + (1 - np.exp(-a)) * np.cos(2 * math.pi / m)) / 6 + np.abs(k) * (np.exp(-a) + (1 - np.exp(-a)) * np.cos(2 * math.pi * k/ m))) / (m * scale)
 	elif mode is 'shepp-logan':
-		q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.sin(math.pi / m) ** a / 6 + np.abs(k) * np.sin((math.pi * k) / m) ** a) / (m * scale)
+		q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.sinc(1 / m) ** a / 6 + np.abs(k) * np.sinc(k / m) ** a) / (m * scale)
 	else:
 		q_k = lambda k, a : (np.where(k == 0, 1, 0) * np.cos(math.pi / m) ** a / 6 + np.abs(k) * np.cos((math.pi * k) / m) ** a) / (m * scale)
 
