@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import ndimage
 
-def post_filter(image, filter):
+def post_filter(image, filter, size=None, amount=None):
     """ Applies filter to the reconstructed image 
     
         filtered = post_filter(image, filter) returns the image filtered
@@ -28,6 +28,12 @@ def post_filter(image, filter):
     if len(img.shape) != 2:
         raise TypeError('image must be a 2D array')
 
+    # check/set size and amount variables
+    if size is None:
+        size = {'denoise': 3, 'close': 5, 'edge': None, 'unsharp': 1}[filter]
+    if amount is None:
+        amount = {'denoise': None, 'close': None, 'edge': None, 'unsharp': 30}[filter]
+
     # apply multistage filtering
     if isinstance(filter, (list, tuple)):
 
@@ -41,28 +47,28 @@ def post_filter(image, filter):
         if filter is 'denoise':
 
             # remove noise by gaussian blur followed by median averaging
-            blurred = ndimage.gaussian_filter(img, 3)
-            return ndimage.median_filter(blurred, 5).astype('int')
+            blurred = ndimage.gaussian_filter(img, size)
+            return ndimage.median_filter(blurred, size+2).astype('int')
 
         elif filter is 'close':
             
             # flatten image by grey dilation/erosion
-            return ndimage.grey_closing(img, (5, 5)).astype('int')
+            return ndimage.grey_closing(img, (size, size)).astype('int')
 
         elif filter is 'edge':
 
             # apply the Sobel operator to detect edges
-            sx = ndimage.sobel(img, axis=0, mode='constant')
-            sy = ndimage.sobel(img, axis=1, mode='constant')
+            sx = ndimage.sobel(img, axis=0, mode='constant', cval=-1024)
+            sy = ndimage.sobel(img, axis=1, mode='constant', cval=-1024)
             edge = np.hypot(sx, sy)
             return np.interp(edge, (edge.min(), edge.max()), (-1024, 3071)).astype('int')
 
         elif filter is 'unsharp':
 
             # add overshoot to edges by unsharp masking
-            blurred = ndimage.gaussian_filter(img, 3)
-            filter_blurred = ndimage.gaussian_filter(blurred, 1)
-            unsharp = blurred + 30 * (blurred - filter_blurred)
+            blurred = ndimage.gaussian_filter(img, size+2)
+            filter_blurred = ndimage.gaussian_filter(blurred, size)
+            unsharp = blurred + amount * (blurred - filter_blurred)
             return np.interp(unsharp, (unsharp.min(), unsharp.max()), (-1024, 3071)).astype('int')
 
         else:
